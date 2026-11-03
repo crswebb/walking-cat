@@ -2,6 +2,8 @@
 
 A cat for Claude Code that walks across the band above your prompt while Claude works.
 
+![A pixel cat walking with a speech bubble and stats line, and a kitten for a subagent](docs/demo.svg)
+
 - **A progress bar with paws.** The cat sets off when a reply starts, walks at the pace of your usual replies, slows down near the end, and sprints off the moment the work is done.
 - **It tells you what's going on.** A speech bubble shows the current step ("Reading register.tsx", "Searching the web: …"), and a line below shows elapsed time, steps, model, effort, and tokens.
 - **It asks for attention.** When Claude is waiting on a permission prompt or a question, the cat's eyes go wide and the bubble turns to a warning.
@@ -9,7 +11,11 @@ A cat for Claude Code that walks across the band above your prompt while Claude 
 - **A receipt when done.** After the cat leaves, a short summary stays until your next message: time, steps, tokens, files read and edited, searches, commands, and agents.
 - **Ten coats**, picked at random: orange, brown, silver, and cream tabby, Russian blue, black, tuxedo, Siamese, calico, and odd-eyed white.
 
+![The ten coats, walking in place](docs/coats.svg)
+
 In the Claude desktop app the cat and kittens are animated 8-bit pixel art; in the terminal they're ASCII art.
+
+The images above are drawn from the plugin's own sprite: `node --experimental-strip-types docs/make-images.ts` makes them again after a change to `hooks/sprite.ts`.
 
 Type `/cat` to send the cat for a stroll.
 
