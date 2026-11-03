@@ -1,0 +1,5 @@
+{
+  "name": "stefan-local-mods",
+  "owner": { "name": "Stefan Bergfeldt" },
+  "plugins": [{ "name": "walking-cat", "source": "./" }]
+}
