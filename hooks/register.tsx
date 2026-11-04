@@ -1,4 +1,3 @@
-import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register, ToolCallInput, TurnUsage } from 'claude-code'
 
 import type { Kitten, Run, Summary, Tally } from './model'
@@ -15,19 +14,33 @@ import {
   walkEnd,
 } from './sprite'
 
-const walk = atom({ plugin: 'walking-cat', key: 'walk' } as const, 0)
-const done = atom({ plugin: 'walking-cat', key: 'done' } as const, 0)
-// Change a tag when its type's fields change: it declines what an earlier
-// version stored, which outlives a reload.
-const run = atom({ plugin: 'walking-cat', key: 'run' } as const, null as Run | null, {
-  shape: 'run-5',
-})
-const summary = atom({ plugin: 'walking-cat', key: 'summary' } as const, null as Summary | null, {
-  shape: 'summary-1',
-})
-const kittens = atom({ plugin: 'walking-cat', key: 'kittens' } as const, [] as Kitten[], {
-  shape: 'kittens-2',
-})
+// The cat's values live in this module, not in Claude Code's session state:
+// a change asks Claude Code to draw the band again. A reload of the module
+// starts them afresh, which at worst sends the cat off until the next turn.
+type Cell<T> = { value: T }
+
+function cell<T>(initial: T): Cell<T> {
+  return { value: initial }
+}
+
+async function read<T>(_$: EngineInterface, source: Cell<T>): Promise<T> {
+  return source.value
+}
+
+async function update<T>($: EngineInterface, target: Cell<T>, change: (value: T) => T): Promise<T> {
+  const value = change(target.value)
+  if (value !== target.value) {
+    target.value = value
+    $.ui.invalidate('ui.render')
+  }
+  return value
+}
+
+const walk = cell(0)
+const done = cell(0)
+const run = cell<Run | null>(null)
+const summary = cell<Summary | null>(null)
+const kittens = cell<Kitten[]>([])
 
 // How long a turn and a subagent take, on average, across sessions: paces
 // the walks.
@@ -469,8 +482,10 @@ export const register: Register = on => {
       return next(e)
     }
     const lines = last === null ? null : summaryLines(last)
-    // One table for both surfaces: each `Client` below is one of these.
-    const { Box, Client, Text } = $.ui.resolve(e)
+    // One table for both surfaces. Each Client element is written
+    // h('Client', { module: './cat.tsx', ... }): a string tag, as the plugin
+    // directory reads it, with its module path fixed in the source.
+    const { Box, Text } = $.ui.resolve(e)
 
     const kittenRows = (catRows: number, summaryRows: number) =>
       Math.max(1, Math.floor((e.props.maxRows - catRows - summaryRows - 1) / 3))
@@ -512,13 +527,7 @@ export const register: Register = on => {
             })
             return (
               <Box flexDirection="column">
-                <Client
-                  key={`tag-${kitten.id}`}
-                  module="./cat.tsx"
-                  props={{ kind: 'tag', ...kitten, elapsedMs: now - kitten.startedAt }}
-                  width={columns}
-                  height={1}
-                />
+                {h('Client', { key: `tag-${kitten.id}`, module: './cat.tsx', props: { kind: 'tag', ...kitten, elapsedMs: now - kitten.startedAt }, width: columns, height: 1 })}
                 <Svg
                   source={source}
                   alt={`A pixel ${kitten.coat} kitten for ${kitten.label}`}
@@ -561,13 +570,7 @@ export const register: Register = on => {
         return (
           <Box flexDirection="column">
             <Svg source={source} alt="A pixel cat strolling across" isInteractive {...svgSize(columns, SPRITE_COLUMNS)} />
-            <Client
-              key={`timer-${stroll}`}
-              module="./cat.tsx"
-              props={{ kind: 'timer', id: stroll, durationMs }}
-              width={columns}
-              height={1}
-            />
+            {h('Client', { key: `timer-${stroll}`, module: './cat.tsx', props: { kind: 'timer', id: stroll, durationMs }, width: columns, height: 1 })}
             {kittensTree}
           </Box>
         )
@@ -591,26 +594,14 @@ export const register: Register = on => {
       const textProps = { ...current, elapsedMs: now - current.startedAt }
       return (
         <Box flexDirection="column">
-          <Client
-            key={`bubble-${current.id}`}
-            module="./cat.tsx"
-            props={{ kind: 'bubble', ...textProps }}
-            width={columns}
-            height={2}
-          />
+          {h('Client', { key: `bubble-${current.id}`, module: './cat.tsx', props: { kind: 'bubble', ...textProps }, width: columns, height: 2 })}
           <Svg
             source={source}
             alt={`A pixel ${current.coat} cat walking`}
             isInteractive
             {...svgSize(columns, SPRITE_COLUMNS)}
           />
-          <Client
-            key={`stats-${current.id}`}
-            module="./cat.tsx"
-            props={{ kind: 'stats', ...textProps }}
-            width={columns}
-            height={1}
-          />
+          {h('Client', { key: `stats-${current.id}`, module: './cat.tsx', props: { kind: 'stats', ...textProps }, width: columns, height: 1 })}
           {kittensTree}
         </Box>
       )
@@ -641,22 +632,10 @@ export const register: Register = on => {
           </Text>
         )}
         {hasCat && (
-          <Client
-            key={`cat-${props.id}`}
-            module="./cat.tsx"
-            props={props}
-            width={e.props.bodyColumns}
-            height={catRows}
-          />
+          h('Client', { key: `cat-${props.id}`, module: './cat.tsx', props: props, width: e.props.bodyColumns, height: catRows })
         )}
         {shown.map(kitten => (
-          <Client
-            key={`kitten-${kitten.id}`}
-            module="./cat.tsx"
-            props={{ kind: 'kitten', ...kitten }}
-            width={e.props.bodyColumns}
-            height={3}
-          />
+          h('Client', { key: `kitten-${kitten.id}`, module: './cat.tsx', props: { kind: 'kitten', ...kitten }, width: e.props.bodyColumns, height: 3 })
         ))}
         {hidden > 0 && (
           <Text dimColor>
