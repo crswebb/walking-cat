@@ -509,12 +509,12 @@ const Cat: ClientModule<Props, State> = (props, s) => {
     }
   }
 
-  // `mono`: the desktop's own face is proportional, where a space is about
-  // half a cell and the cat would stop midway; the terminal ignores it.
+  // Only the terminal draws the ASCII cat (the desktop draws the pixel one),
+  // and its text is monospace already: no `mono`, which it refuses.
   return (
     <Box flexDirection="column" overflow="hidden" height={height}>
       {rows.map(runs => (
-        <Text mono wrap="truncate">
+        <Text wrap="truncate">
           {runs.length === 0
             ? ' '
             : runs.map(run => (
