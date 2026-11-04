@@ -26,6 +26,7 @@ Everything the cat shows comes from your own Claude Code session, and nothing le
 - **What it reads:** the tool calls Claude makes (the tool's name and a few words of its input, such as a file name, a search query, a command's description, or a web address's host), each subagent's type and task description, the model and effort level of each request, token counts, how long each reply takes, and Claude Code's notice that a permission prompt is waiting.
 - **What it keeps:** the average time a reply and a subagent take, in Claude Code's own plugin storage on your machine, so the cat's pace fits how you work. Everything else lives only for the session.
 - **What it doesn't do:** it makes no network requests, runs no commands, writes no files, and never changes a tool call, a prompt, or a permission. It only watches, and draws.
+- **Two words that look alarming but aren't:** "tokens" in the code (`tokens()`, `contextTokens`, `outputTokens` in `hooks/cat.tsx`) means the model's token counts shown in the stats line, never a login token or any other credential. The one web address in the code, `http://www.w3.org/2000/svg` in `hooks/sprite.ts`, is the standard namespace label every SVG drawing carries; nothing is fetched from it or sent to it.
 
 ## How it works
 
