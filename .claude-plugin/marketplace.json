@@ -1,5 +1,6 @@
 {
   "name": "stefan-local-mods",
+  "description": "walking-cat: a pixel cat progress bar for Claude Code.",
   "owner": { "name": "Stefan Bergfeldt" },
   "plugins": [{ "name": "walking-cat", "source": "./" }]
 }

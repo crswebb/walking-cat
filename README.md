@@ -19,6 +19,16 @@ The images above are drawn from the plugin's own sprite: `node --experimental-st
 
 Type `/cat` to send the cat for a stroll.
 
+## Privacy
+
+Everything the cat shows comes from your own Claude Code session, and nothing leaves your machine.
+
+- **What it reads:** the tool calls Claude makes (the tool's name and a few words of its input, such as a file name, a search query, a command's description, or a web address's host), each subagent's type and task description, the model and effort level of each request, token counts, how long each reply takes, and permission prompts.
+- **What it keeps:** the average time a reply and a subagent take, in Claude Code's own plugin storage on your machine, so the cat's pace fits how you work. Everything else lives only for the session.
+- **What it doesn't do:** it makes no network requests, runs no commands, writes no files, and never changes a tool call, a prompt, or a permission. It only watches, and draws.
+
+`docs/make-images.ts` draws the images in this README; the plugin never runs it.
+
 ## Install
 
 At the prompt of a Claude Code terminal session:
@@ -42,3 +52,7 @@ In the Claude desktop app, where `/plugin` doesn't run: click **+** next to the 
 ```
 claude plugin disable walking-cat
 ```
+
+## License
+
+[MIT](LICENSE)
