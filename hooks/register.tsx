@@ -1,7 +1,7 @@
 import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register, ToolCallInput, TurnUsage } from 'claude-code'
 
-import type { Kitten, Run, Summary, Tally } from '../types'
+import type { Kitten, Run, Summary, Tally } from './model'
 
 import {
   coatNamed,
@@ -469,6 +469,8 @@ export const register: Register = on => {
       return next(e)
     }
     const lines = last === null ? null : summaryLines(last)
+    // One table for both surfaces: each `Client` below is one of these.
+    const { Box, Client, Text } = $.ui.resolve(e)
 
     const kittenRows = (catRows: number, summaryRows: number) =>
       Math.max(1, Math.floor((e.props.maxRows - catRows - summaryRows - 1) / 3))
@@ -476,7 +478,7 @@ export const register: Register = on => {
     // The desktop draws the pixel cat: bubble and stats as text, the cat as
     // one animated SVG between them.
     if (e.surface === 'desktop') {
-      const { Box, Client, Svg, Text } = $.ui.resolve(e)
+      const { Svg } = $.ui.resolve(e)
       const columns = e.props.bodyColumns
       const now = await $.clock.now()
       // Each kitten: its tag as text riding above it, then the pixel kitten.
@@ -614,7 +616,6 @@ export const register: Register = on => {
       )
     }
 
-    const { Box, Client, Text } = $.ui.resolve(e)
     const catRows = current !== null ? 8 : hasCat ? 5 : 0
     // As many kittens as the band has room for, three rows each.
     const summaryRows = lines === null ? 0 : lines.body === null ? 1 : 2

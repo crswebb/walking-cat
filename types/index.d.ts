@@ -1,3 +1,6 @@
+// The cat's state contract for Claude Code's own checks, which want it whole:
+// the same types as hooks/model.ts, which the hooks import; keep the two alike.
+
 // A /cat stroll's number: the cat is on screen while walk > done.
 export type WalkId = number
 

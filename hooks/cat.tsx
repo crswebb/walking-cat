@@ -1,6 +1,6 @@
 import type { ClientModule, ClientSurface } from 'claude-code'
 
-import type { Kitten, Run } from '../types'
+import type { Kitten, Run } from './model'
 
 // `progress` walks toward the end as a turn runs and sprints there once it is
 // done, saying what is going on; `stroll` just crosses the screen; `kitten`
