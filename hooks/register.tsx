@@ -399,12 +399,15 @@ export const register: Register = on => {
     }
   })
 
-  // Fires as a permission prompt is about to be shown: the cat raises the alarm
-  // until that tool call ends, allowed or denied.
-  on('classic.PermissionRequest', async ($, e, next) => {
-    await update($, run, current =>
-      current === null || current.isDone ? current : { ...current, isWaiting: true },
-    )
+  // Claude Code's notice that a prompt waits on the person (a permission, or a
+  // question from an MCP server): the cat raises the alarm until that tool call
+  // ends. It reads the notice only; the prompt itself is never touched.
+  on('classic.Notification', async ($, e, next) => {
+    if (e.notification_type === 'permission_prompt' || e.notification_type === 'elicitation_dialog') {
+      await update($, run, current =>
+        current === null || current.isDone ? current : { ...current, isWaiting: true },
+      )
+    }
 
     return next(e)
   })
