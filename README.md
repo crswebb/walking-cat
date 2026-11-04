@@ -27,7 +27,23 @@ Everything the cat shows comes from your own Claude Code session, and nothing le
 - **What it keeps:** the average time a reply and a subagent take, in Claude Code's own plugin storage on your machine, so the cat's pace fits how you work. Everything else lives only for the session.
 - **What it doesn't do:** it makes no network requests, runs no commands, writes no files, and never changes a tool call, a prompt, or a permission. It only watches, and draws.
 
-`docs/make-images.ts` draws the images in this README; the plugin never runs it.
+`docs/make-images.ts` draws the images in this README and the listing icon; the plugin never runs it.
+
+## How it works
+
+walking-cat is a Claude Code mod: a hooks module (`hooks/register.tsx`) and the drawing code it shows (`hooks/cat.tsx`, `hooks/sprite.ts`). None of its hooks decides anything or changes anything: each one notes what happened and passes the event on exactly as it came, and the cat is drawn from those notes.
+
+| Hook | When it runs | What it does | What it decides or changes |
+| --- | --- | --- | --- |
+| `session.start` | Once, as a session starts | Registers the `/cat` command | Nothing |
+| `command.run` for `/cat` | When you type `/cat` | Sends the cat for a stroll and answers "Here comes the cat." | Only that command, which is its own |
+| `turn.start`, `turn.complete` | As each reply (or subagent run) starts and ends | Starts and stops the cat or kitten, and records how long the reply took | Nothing |
+| `turn.step` | Around each model request | Reads the model, effort level and token counts; the response streams through untouched | Nothing |
+| `tool.call` | Around each tool call | Reads the tool's name and a few words of its input for the speech bubble and the summary (a file name, a search query, a command's own description, a web address's host; never a command's text) | Nothing: it never blocks, rewrites or answers a tool call |
+| `classic.PermissionRequest` | As a permission prompt is about to show | Makes the cat look alarmed until the call ends | Nothing: it never answers the prompt, which stays yours |
+| `agent.spawn` | As a subagent starts | Reads the subagent's type and short task description for its kitten | Nothing: the subagent starts as asked |
+| `ui.render` for the band above the prompt | While there's something to show | Draws the cat, the kittens and the summary in the band above your prompt; with nothing to show it leaves the band to Claude Code | While the cat is out, it draws that band itself |
+| `ui.message` | When a cat or kitten has walked off | Takes it off the screen | Nothing |
 
 ## Install
 

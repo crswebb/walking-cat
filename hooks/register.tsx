@@ -73,7 +73,8 @@ const describe = (e: ToolCallInput) => {
         return `Writing ${file}`
       case 'Bash':
       case 'PowerShell':
-        return field('description') || `Running ${field('command').split(' ')[0]}`
+        // The command's own description only: its text may hold a secret.
+        return field('description') || 'Running a command'
       case 'Grep':
         return `Searching for "${field('pattern')}"`
       case 'Glob':

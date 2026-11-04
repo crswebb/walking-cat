@@ -297,5 +297,18 @@ export const pickCoatName = (last: string | null) => {
   return names[Math.floor(Math.random() * names.length)] ?? 'orange tabby'
 }
 
+// The sprite in `pose` as rows of colors, null where it is see-through: for
+// drawing it outside an SVG, as the listing icon is.
+export const spritePixels = (coat: PixelCoat, pose = 1) => {
+  const feet = legs(pose)
+  return still(false).map((row, y) =>
+    row.map((c, x) => {
+      const foot = feet[y]?.[x] ?? '.'
+      const part = foot === '.' ? c : foot
+      return part === '.' ? null : colorOf(coat, part, x)
+    }),
+  )
+}
+
 export const coatNamed = (name: string | null) =>
   COATS.find(coat => coat.name === name) ?? (COATS[0] as PixelCoat)

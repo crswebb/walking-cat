@@ -1,11 +1,13 @@
 // Draws the README's images from the plugin's own sprite:
 //   node --experimental-strip-types docs/make-images.ts
-// writes docs/demo.svg (the cat strolling with its bubble and stats) and
-// docs/coats.svg (every coat walking in place).
+// writes docs/demo.svg (the cat strolling with its bubble and stats),
+// docs/coats.svg (every coat walking in place) and .claude-plugin/icon.png
+// (the directory listing's icon).
 
 import { writeFileSync } from 'node:fs'
+import { deflateSync } from 'node:zlib'
 
-import { COATS, KITTEN_COLUMNS, rowsFor, SPRITE_COLUMNS, spriteSvg } from '../hooks/sprite.ts'
+import { COATS, KITTEN_COLUMNS, rowsFor, SPRITE_COLUMNS, spritePixels, spriteSvg } from '../hooks/sprite.ts'
 
 const BG = '#262624'
 const TEXT = '#E8E6E1'
@@ -104,4 +106,58 @@ const coats =
   `<rect width="${coatsW}" height="${coatsH}" rx="12" fill="${BG}"/>${tiles}</svg>`
 writeFileSync(new URL('./coats.svg', import.meta.url), coats)
 
-console.log(`demo.svg ${demo.length} chars, coats.svg ${coats.length} chars`)
+// icon.png: the orange tabby standing, square, on the band's dark color.
+const crcTable = Array.from({ length: 256 }, (_, n) => {
+  let c = n
+  for (let k = 0; k < 8; k++) {
+    c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1
+  }
+  return c >>> 0
+})
+const crc32 = (bytes: Buffer) => {
+  let c = 0xffffffff
+  for (const b of bytes) {
+    c = (crcTable[(c ^ b) & 0xff] ?? 0) ^ (c >>> 8)
+  }
+  return (c ^ 0xffffffff) >>> 0
+}
+const chunk = (type: string, data: Buffer) => {
+  const head = Buffer.alloc(8)
+  head.writeUInt32BE(data.length, 0)
+  head.write(type, 4, 'ascii')
+  const crc = Buffer.alloc(4)
+  crc.writeUInt32BE(crc32(Buffer.concat([head.subarray(4), data])), 0)
+  return Buffer.concat([head, data, crc])
+}
+const SIZE = 1024
+const SCALE = 40
+const art = spritePixels(COATS.find(c => c.name === 'orange tabby') ?? COATS[0]!)
+const artW = (art[0]?.length ?? 0) * SCALE
+const artH = art.length * SCALE
+const left = Math.floor((SIZE - artW) / 2)
+const top = Math.floor((SIZE - artH) / 2)
+const hex = (color: string) => [1, 3, 5].map(i => parseInt(color.slice(i, i + 2), 16))
+const rows: Buffer[] = []
+for (let y = 0; y < SIZE; y++) {
+  const row = Buffer.alloc(1 + SIZE * 3)
+  for (let x = 0; x < SIZE; x++) {
+    const color = art[Math.floor((y - top) / SCALE)]?.[Math.floor((x - left) / SCALE)]
+    const inside = x >= left && y >= top && x < left + artW && y < top + artH
+    const [r, g, b] = hex(inside && color ? color : BG)
+    row.set([r ?? 0, g ?? 0, b ?? 0], 1 + x * 3)
+  }
+  rows.push(row)
+}
+const header = Buffer.alloc(13)
+header.writeUInt32BE(SIZE, 0)
+header.writeUInt32BE(SIZE, 4)
+header.set([8, 2, 0, 0, 0], 8)
+const png = Buffer.concat([
+  Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+  chunk('IHDR', header),
+  chunk('IDAT', deflateSync(Buffer.concat(rows))),
+  chunk('IEND', Buffer.alloc(0)),
+])
+writeFileSync(new URL('../.claude-plugin/icon.png', import.meta.url), png)
+
+console.log(`demo.svg ${demo.length} chars, coats.svg ${coats.length} chars, icon.png ${png.length} bytes`)

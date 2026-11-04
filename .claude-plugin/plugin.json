@@ -1,6 +1,6 @@
 {
   "name": "walking-cat",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "A pixel cat walks above the prompt as a progress bar for each turn, saying what Claude is doing, with a pixel kitten per subagent and a summary when done. Type /cat to send it for a stroll.",
   "author": { "name": "Stefan Bergfeldt" },
   "license": "MIT",
