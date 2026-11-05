@@ -4,7 +4,8 @@
 
 import type { EngineInterface, Register } from 'claude-code'
 
-import { agentTag, contextOf, describe, EMPTY_TALLY, tallied } from './activity'
+import { agentTag, contextOf, describe, EMPTY_TALLY, tallied, UNKNOWN_AGENT } from './activity'
+import type { AgentTag } from './activity'
 import { desktopBand, isEmpty, terminalBand } from './band'
 import type { BandState } from './band'
 import type { Kitten, Run, Summary } from './model'
@@ -63,20 +64,20 @@ const removeFirst = <T,>(list: T[], matches: (item: T) => boolean) => {
 }
 
 // Tags of spawns not yet matched to an agent id, oldest first.
-const pendingTags: string[] = []
+const pendingTags: AgentTag[] = []
 
 // A kitten for agent `id`, made on first sight; `tag` names it when known.
-async function ensureKitten($: EngineInterface, id: string, tag?: string) {
+async function ensureKitten($: EngineInterface, id: string, tag?: AgentTag) {
   const now = await $.clock.now()
   const expectedMs = await averageMs($, AGENT_AVERAGE)
   await update($, kittens, list => {
     if (list.some(kitten => kitten.id === id)) {
-      return tag === undefined ? list : list.map(k => (k.id === id ? { ...k, label: tag } : k))
+      return tag === undefined ? list : list.map(k => (k.id === id ? { ...k, ...tag } : k))
     }
     const fresh = list.filter(k => now - k.startedAt < KITTEN_MAX_AGE_MS)
     const kitten: Kitten = {
       id,
-      label: tag ?? pendingTags.shift() ?? 'Agent',
+      ...(tag ?? pendingTags.shift() ?? UNKNOWN_AGENT),
       expectedMs,
       startedAt: now,
       isDone: false,
@@ -123,9 +124,10 @@ export const register: Register = on => {
     const tag = agentTag(e.subagentType, e.description)
     pendingTags.push(tag)
     const spawned = await next(e)
+    removeFirst(pendingTags, pending => pending === tag)
     if (spawned.agentId !== undefined) {
-      removeFirst(pendingTags, pending => pending === tag)
-      await ensureKitten($, spawned.agentId, tag)
+      // A teammate's own name is known only once it has started.
+      await ensureKitten($, spawned.agentId, agentTag(e.subagentType, e.description, spawned.teammateId))
     }
     return spawned
   })

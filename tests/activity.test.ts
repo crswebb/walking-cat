@@ -32,9 +32,16 @@ test('a long label is cut to fit the bubble', () => {
   expect(label.endsWith('…')).toBe(true)
 })
 
-test("a kitten's tag drops the everyday agent type", () => {
-  expect(agentTag('general-purpose', 'Cat sleep facts')).toBe('Cat sleep facts')
-  expect(agentTag('Explore', 'Find the auth code')).toBe('Explore: Find the auth code')
+test("a kitten's tag names its agent type and its task", () => {
+  expect(agentTag('general-purpose', 'Cat sleep facts')).toEqual({ agent: 'general-purpose', label: 'Cat sleep facts' })
+  expect(agentTag('Explore', 'Find the auth code')).toEqual({ agent: 'Explore', label: 'Find the auth code' })
+})
+
+test("a teammate's tag names the teammate, not its type", () => {
+  expect(agentTag('teammate', 'Review the docs', 'reviewer@docs-team')).toEqual({
+    agent: 'reviewer',
+    label: 'Review the docs',
+  })
 })
 
 test('the context counts fresh input and both kinds of cache', () => {

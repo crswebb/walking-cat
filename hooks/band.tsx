@@ -146,7 +146,7 @@ export const desktopBand = (
             {client(`tag-${kitten.id}`, tag, columns, 1)}
             <Svg
               source={source}
-              alt={`A pixel ${kitten.coat} kitten for ${kitten.label}`}
+              alt={`A pixel ${kitten.coat} kitten for ${kitten.agent}: ${kitten.label}`}
               isInteractive
               {...svgSize(columns, KITTEN_COLUMNS)}
             />

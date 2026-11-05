@@ -120,17 +120,25 @@ const statsOf = (run: Run, elapsedMs: number) => {
   return [time, plural(run.steps, 'step'), ...model, ...usage].join(' · ')
 }
 
-// A kitten's tag: its task, then its time and steps, or "done".
-const tagText = (kitten: Kitten, elapsedMs: number, room: number) => {
+// A kitten's tag, cut to fit `room`: its agent's name in the accent color,
+// then its task and its time and steps (or "done"). The task gives way
+// first, the name last.
+const tagSpans = (kitten: Kitten, elapsedMs: number, room: number): Span[] => {
   const stats = kitten.isDone ? 'done' : `${clock(elapsedMs)} · ${plural(kitten.steps, 'step')}`
-  return `${kitten.label.slice(0, Math.max(0, room - stats.length - 3))} · ${stats}`
+  const name = kitten.agent.slice(0, Math.max(1, room - stats.length - 3))
+  const taskRoom = room - name.length - stats.length - 6
+  const task = taskRoom >= 4 ? kitten.label.slice(0, taskRoom) : ''
+  return [
+    { text: name, color: kitten.isDone ? 'success' : 'claude' },
+    {
+      text: `${task === '' ? '' : ` · ${task}`} · ${stats}`,
+      color: kitten.isDone ? 'success' : undefined,
+      dim: !kitten.isDone,
+    },
+  ]
 }
 
-const tagSpan = (kitten: Kitten, text: string): Span => ({
-  text,
-  color: kitten.isDone ? 'success' : undefined,
-  dim: !kitten.isDone,
-})
+const widthOf = (spans: Span[]) => spans.reduce((width, span) => width + span.text.length, 0)
 
 // The rows as Text, one each; `mono` only where the surface takes it, as
 // the desktop does and the terminal (monospace already) refuses, even unset.
@@ -215,9 +223,9 @@ const PixelCatText = (props: Beside, s: ClientSurface<BesideState>) => {
     return drawRows(s.elements, bubbleRows(props, Math.round(st.x) + PIXEL_HEAD, edge), height, true)
   }
   if (props.kind === 'tag') {
-    const text = tagText(props, elapsedMs, edge)
-    const left = Math.max(0, Math.min(Math.round(st.x), edge - text.length))
-    return drawRows(s.elements, [compose([{ at: left, spans: [tagSpan(props, text)] }], edge)], height, true)
+    const spans = tagSpans(props, elapsedMs, edge)
+    const left = Math.max(0, Math.min(Math.round(st.x), edge - widthOf(spans)))
+    return drawRows(s.elements, [compose([{ at: left, spans }], edge)], height, true)
   }
   return drawRows(s.elements, [compose([{ at: 0, spans: [{ text: statsOf(props, elapsedMs), dim: true }] }], edge)], height, true)
 }
@@ -246,7 +254,7 @@ const KIT_FACES = [String.raw` ~( o.o ) `, String.raw` _( o.o ) `]
 const KIT_BLINKS = [String.raw` ~( -.- ) `, String.raw` _( -.- ) `]
 const KIT_PAWS = [String.raw`   (")(") `, String.raw`  (") (") `]
 const KIT_WIDTH = KIT_EARS.length
-// The kitten pulls a banner: its label, then time and steps in a fixed width
+// The kitten pulls a banner: its agent and task, then time and steps in a fixed width
 // so the kitten does not jump as they change.
 const BANNER_STATS_WIDTH = 16
 
@@ -380,7 +388,7 @@ const paint = (
 // Where the kitten walks from: right of its banner, which takes the label
 // and a fixed width of stats, at most 45% of the room.
 const bannerWidth = (kitten: Kitten, columns: number) =>
-  Math.min(Math.floor(columns * 0.45), kitten.label.length + 3 + BANNER_STATS_WIDTH)
+  Math.min(Math.floor(columns * 0.45), kitten.agent.length + 3 + kitten.label.length + 3 + BANNER_STATS_WIDTH)
 
 // `live` is this instance's own box: the timer reads the newest props from it.
 type AsciiState = { x: number; elapsedMs: number; step: number; isPosted: boolean; coat: Coat; live: { props: Ascii } }
@@ -440,10 +448,10 @@ const AsciiCat = (props: Ascii, s: ClientSurface<AsciiState>) => {
     const color = (row: number, column: number, ch: string) => kittenColor(st.coat, row, column, ch)
     const wag = pose % 2
     const face = (isBlinking ? KIT_BLINKS : KIT_FACES)[wag] ?? ''
-    const banner = tagText(props, st.elapsedMs, offset - 1)
+    const banner = tagSpans(props, st.elapsedMs, offset - 1)
     const rows = [
       compose([paint(KIT_EARS, 0, x, edge, color)], edge),
-      compose([{ at: 0, spans: [tagSpan(props, banner)] }, paint(face, 1, x, edge, color)], edge),
+      compose([{ at: 0, spans: banner }, paint(face, 1, x, edge, color)], edge),
       compose([paint(KIT_PAWS[st.step === 0 ? 0 : wag] ?? '', 2, x, edge, color)], edge),
     ]
     return drawRows(s.elements, rows, height, false)

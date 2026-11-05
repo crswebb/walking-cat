@@ -53,10 +53,12 @@ export type Summary = {
   coat: string | null
 }
 
-// A subagent's kitten: walks as that agent's progress bar, pulling a banner
-// with `label`. `startedAt` lets a kitten whose end never came be dropped.
+// A subagent's kitten: walks as that agent's progress bar, its tag naming
+// `agent` (a teammate's own name, else the agent type) and its task, `label`.
+// `startedAt` lets a kitten whose end never came be dropped.
 export type Kitten = {
   id: string
+  agent: string
   label: string
   expectedMs: number
   startedAt: number

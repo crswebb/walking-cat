@@ -8,6 +8,7 @@ import type { Tally } from './model'
 
 const LABEL_MAX = 40
 const TAG_MAX = 30
+const NAME_MAX = 24
 
 // A tool call's input field as text, or '' where it has none.
 const fieldOf = (e: ToolCallInput, key: string) => {
@@ -62,10 +63,18 @@ export const describe = (e: ToolCallInput) => {
   return clip(label, LABEL_MAX)
 }
 
-// A kitten's tag, short enough to ride above it: the task, and the agent type
-// when it is not the everyday one.
-export const agentTag = (subagentType: string, description: string) =>
-  clip(subagentType === 'general-purpose' ? description : `${subagentType}: ${description}`, TAG_MAX)
+// A kitten's tag, short enough to ride above it: the agent's name (a
+// teammate's own, from its `<name>@<team>` address, else the agent type it
+// was started as) and its task.
+export type AgentTag = { agent: string; label: string }
+
+export const agentTag = (subagentType: string, description: string, teammateId?: string): AgentTag => ({
+  agent: clip(teammateId?.split('@')[0] || subagentType, NAME_MAX),
+  label: clip(description, TAG_MAX),
+})
+
+// A kitten seen before its spawn said who it is.
+export const UNKNOWN_AGENT: AgentTag = { agent: 'agent', label: '' }
 
 // Everything a request sent: fresh input plus what the cache wrote and read.
 export const contextOf = (usage: TurnUsage) =>
