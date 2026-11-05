@@ -26,11 +26,11 @@ Everything the cat shows comes from your own Claude Code session, and nothing le
 - **What it reads:** the tool calls Claude makes (the tool's name and a few words of its input, such as a file name, a search query, a command's description, or a web address's host), each subagent's type and task description, the model and effort level of each request, token counts, how long each reply takes, and Claude Code's notice that a permission prompt is waiting.
 - **What it keeps:** the average time a reply and a subagent take, in Claude Code's own plugin storage on your machine, so the cat's pace fits how you work. Everything else lives only for the session.
 - **What it doesn't do:** it makes no network requests, runs no commands, writes no files, and never changes a tool call, a prompt, or a permission. It only watches, and draws.
-- **Two words that look alarming but aren't:** "tokens" in the code (`tokens()`, `contextTokens`, `outputTokens` in `hooks/cat.tsx`) means the model's token counts shown in the stats line, never a login token or any other credential. The one web address in the code, `http://www.w3.org/2000/svg` in `hooks/sprite.ts`, is the standard namespace label every SVG drawing carries; nothing is fetched from it or sent to it.
+- **Two words that look alarming but aren't:** "tokens" in the code (`contextTokens`, `outputTokens` in `hooks/model.ts` and wherever the stats are drawn) means the model's token counts shown in the stats line, never a login token or any other credential. The one web address in the code, `http://www.w3.org/2000/svg` in `hooks/sprite.ts`, is the standard namespace label every SVG drawing carries; nothing is fetched from it or sent to it.
 
 ## How it works
 
-walking-cat is a Claude Code mod: a hooks module (`hooks/register.tsx`) and the drawing code it shows (`hooks/cat.tsx`, `hooks/sprite.ts`). None of its hooks decides anything or changes anything: each one notes what happened and passes the event on exactly as it came, and the cat is drawn from those notes.
+walking-cat is a Claude Code mod: a hooks module (`hooks/register.tsx`) and the drawing code it shows. None of its hooks decides anything or changes anything: each one notes what happened and passes the event on exactly as it came, and the cat is drawn from those notes.
 
 | Hook | When it runs | What it does | What it decides or changes |
 | --- | --- | --- | --- |
@@ -43,6 +43,23 @@ walking-cat is a Claude Code mod: a hooks module (`hooks/register.tsx`) and the 
 | `agent.spawn` | As a subagent starts | Reads the subagent's type and short task description for its kitten | Nothing: the subagent starts as asked |
 | `ui.render` for the band above the prompt | While there's something to show | Draws the cat, the kittens and the summary in the band above your prompt; with nothing to show it leaves the band to Claude Code | While the cat is out, it draws that band itself |
 | `ui.message` | When a cat or kitten has walked off | Takes it off the screen | Nothing |
+
+### The code
+
+| File | What it holds |
+| --- | --- |
+| `hooks/register.tsx` | The hooks above and the few values the cat keeps; everything that talks to Claude Code |
+| `hooks/activity.ts` | What the speech bubble says for each tool, kitten tags, and a turn's tally |
+| `hooks/summary.ts` | The receipt left above the prompt when a turn is done |
+| `hooks/band.tsx` | What the band above the prompt holds, on the desktop and in the terminal |
+| `hooks/sprite.ts` | The pixel cat: its art, its ten coats and its animated SVG |
+| `hooks/cat.tsx` | The surface module each walking cat, kitten and line of text runs in, on its own clock |
+| `hooks/format.ts` | Times, counts and model names as the cat shows them |
+| `hooks/model.ts` | The shape of the cat's values |
+
+`hooks/cat.tsx` imports no code of the plugin's, since Claude Code carries a surface module to the screen as it is. It keeps copies of a few values from `sprite.ts` and `format.ts`, and `tests/mirror.test.ts` fails if a copy drifts.
+
+To check a change, run `claude plugin validate .` and `claude plugin test .` in this folder.
 
 ## Install
 
