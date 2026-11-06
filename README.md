@@ -63,21 +63,34 @@ To check a change, run `claude plugin validate .` and `claude plugin test .` in 
 
 ## Install
 
-At the prompt of a Claude Code terminal session:
+walking-cat isn't in Anthropic's plugin directory, so the first install also adds this repository as a plugin source (a "marketplace"). You do that once; after it, updates come from here.
 
-```
-/plugin install walking-cat --marketplace crswebb/walking-cat
-```
+**In a Claude Code terminal session:**
 
-Answer `y` to add the marketplace, then pick a scope (user scope loads it in every session).
+1. At the prompt, type:
 
-From a shell:
+   ```
+   /plugin install walking-cat --marketplace crswebb/walking-cat
+   ```
+
+2. When it asks **Add marketplace?** for `github:crswebb/walking-cat`, answer **`y`**.
+3. Pick a scope: **user** loads the cat in every session.
+
+**From a shell:**
 
 ```
 claude plugin install walking-cat --marketplace crswebb/walking-cat
 ```
 
-In the Claude desktop app, where `/plugin` doesn't run: click **+** next to the prompt box, then **Plugins**, **Add marketplace** with `crswebb/walking-cat`, then **Add plugin**.
+If it asks to add the marketplace, answer **`y`**.
+
+**In the Claude desktop app** (where `/plugin` doesn't run):
+
+1. Click **+** next to the prompt box, then **Plugins**.
+2. Choose **Add marketplace** and enter `crswebb/walking-cat`.
+3. Find **walking-cat** in the list and choose **Add plugin**.
+
+To get a newer version later: `claude plugin update walking-cat`.
 
 ## Turning it off
 
